@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract staking is ERC20{
+ mapping(address => uint) public staked;
+ mapping(address => uint) private stakedFromTS; // mapping address with timestamp and visibility identifier private not to be seen by the public
+
+constructor() ERC20( "JoySam Token", "JST"){ //constuctor to intialise the ERC20 from openze taking in an input 
+  _mint(msg.sender, 10**18); //mint function takes in the address and amount
+
+}
+
+ function stake(uint amount) public {
+  require(amount >0, "amount <=0"); //the amount inputed to stake must be greater than 0
+  require(balanceOf(msg.sender) >= amount, "You do not have up to that amount");// balance of the person calling the function stake
+  _transfer(msg.sender, address(this), amount); //taking the money out of the persons account
+
+  if(staked[msg.sender] > 0){ //if you stake money and is greater than 0, u can claim your money
+  claim();
+  
+  }
+ 
+ stakedFromTS[msg.sender] = block.timestamp; // staking now
+ staked[msg.sender] = staked[msg.sender] + amount; //now that you are staking, your record need to be kept
+//adding the amount to your record
+ }
+
+ function unstake(uint amount) public {
+  require(amount >0, "amount <=0"); //whatever you want to unstake must be greater than 0
+  require(staked[msg.sender] > 0, "You did not stake with us"); //
+  _transfer(address(this), msg.sender,amount); //transfer of the inputed amount to unstake
+
+  stakedFromTS[msg.sender] = block.timestamp; //updating the system on time
+  staked[msg.sender] = staked[msg.sender] - amount; //deducting the money from your money on the platform
+
+ }
+ function claim() public { 
+ require(staked[msg.sender] > 0, "You did not stake with us");
+ uint secondsStaked = block.timestamp - stakedFromTS[msg.sender]; //time staked
+
+ uint rewards = staked[msg.sender] * secondsStaked / 3.154e7;
+
+ _mint(msg.sender, rewards);
+ stakedFromTS[msg.sender] = block.timestamp;
+ 
+
+ }
+
+}
